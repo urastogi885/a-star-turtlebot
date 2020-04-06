@@ -1,0 +1,21 @@
+
+# Set OS to linux
+os: linux
+
+# Set the build language to Python
+language: python
+
+# Set the python version to 3.5
+python: 3.5
+
+before_install:
+  - sudo apt-get update
+
+# Install the library dependencies
+install:
+  - sudo apt-get install python3
+  - pip3 install numpy opencv-python
+
+# Run python scripts
+script:
+  - python3 a_star_turtlebot.py 0.25,0.25,0 9.75,9.75,0 0.5,30 1
