@@ -26,20 +26,22 @@ def check_node_validity(check_img, x, y):
 
 
 class Explorer:
-    def __init__(self, start_node, goal_node, step_size, step_theta):
+    def __init__(self, start_node, goal_node, robot_rpm):
         """
         Initialize the explorer with a start node and final goal node
         :param start_node: a tuple of start coordinates and orientation provided by the user
         :param goal_node: a tuple of goal coordinates and orientation provided by the user
+        :param robot_rpm: a tuple of 2 RPMs for 2 wheels
         """
         # Store start and goal nodes
         self.start_node = start_node
         self.goal_node = goal_node
+        # Store RPMs of robot
+        self.robot_rpm = robot_rpm
         # Store angular step size and translation step size
-        self.step_theta = step_theta
-        self.step_size = step_size
+        self.step_size, self.step_theta = constants.step_params
         # Store map dimensions
-        self.map_size = constants.map_size[0], constants.map_size[1], (constants.total_angle // step_theta)
+        self.map_size = constants.map_size[0], constants.map_size[1], (constants.total_angle // self.step_theta)
         # Define an empty list to store all generated nodes and path nodes
         self.generated_nodes = []
         self.path_nodes = []
@@ -78,26 +80,59 @@ class Explorer:
         return (self.base_cost[parent_node[0]][parent_node[1]][parent_node[2]] +
                 sqrt((child_node[0] - parent_node[0]) ** 2 + (child_node[1] - parent_node[1]) ** 2))
 
+    def action_space(self, action):
+        """
+        Define action space
+        :param action: Varies from 0-7 to call one of the 8 defined actions
+        :return: a tuple of left and right wheel RPM
+        """
+
+        if action == 0:
+            return 0, self.robot_rpm[0]
+        elif action == 1:
+            return 0, self.robot_rpm[1]
+        elif action == 2:
+            return self.robot_rpm[0], 0
+        elif action == 3:
+            return self.robot_rpm[1], 0
+        elif action == 4:
+            return self.robot_rpm[0], self.robot_rpm[0]
+        elif action == 5:
+            return self.robot_rpm[1], self.robot_rpm[1]
+        elif action == 6:
+            return self.robot_rpm[0], self.robot_rpm[1]
+
+        return self.robot_rpm[1], self.robot_rpm[0]
+
     def take_action(self, parent_node, action):
         """
-        Call various actions based on an integer
+        Call various actions based on an integer and get new child coordinates and orientation
+        Applying differential drive formulae to get coordinates and orientation
         :param parent_node: a tuple of parent node coordinates and orientation
         :param action: Varies from 0-n to call one of the 8 defined actions
         :return: new coordinates and orientation of the node after the desired action
         """
-        # Convert unit of angle from degrees to radians
-        if action <= constants.half_actions:
-            theta = (parent_node[2] + action) * self.step_theta
-            if theta >= 360:
-                theta = theta - 360
-        else:
-            theta = (parent_node[2] - (action - constants.half_actions)) * self.step_theta
-            if theta < 0:
-                theta = 360 + theta
+        # Get parent orientation in degrees
+        theta = parent_node[2] * self.step_theta
+        # Get action to be performed on parent to generate child
+        rpm = self.action_space(action)
+        # Get Change in orientation in radians
+        d_theta = (constants.robot_radius / constants.wheel_distance) * (rpm[1] - rpm[0]) * constants.time_step
+        if d_theta > 2 * np.pi:
+            n = int(d_theta / (2 * np.pi))
+            d_theta = d_theta - n * 2 * np.pi
+        elif d_theta < 0:
+            d_theta = abs(d_theta)
+            if d_theta > 2 * np.pi:
+                n = int(d_theta / (2 * np.pi))
+                d_theta = d_theta - n * 2 * np.pi
+        # Get change in movement of robot in x, y direction
+        d_x = (constants.robot_radius / 2) * (rpm[0] + rpm[1]) * np.cos(np.pi * theta / 180) * constants.time_step
+        d_y = (constants.robot_radius / 2) * (rpm[0] + rpm[1]) * np.sin(np.pi * theta / 180) * constants.time_step
+        # Get orientation of child node in degrees
+        theta = theta + (180 * d_theta / np.pi)
         # Return the coordinates and orientation of the child node
-        return (parent_node[0] + int(self.step_size * np.sin(np.pi * theta / 180)),
-                parent_node[1] + int(self.step_size * np.cos(np.pi * theta / 180)),
-                theta // self.step_theta)
+        return parent_node[0] + int(d_y), parent_node[1] + int(d_x), int(theta) // self.step_theta
 
     def explore(self, map_img):
         """
