@@ -13,7 +13,7 @@ class Map:
         # Various class parameters
         self.height = constants.map_size[0]
         self.width = constants.map_size[1]
-        self.thresh = constants.robot_diameter + constants.robot_clearance
+        self.thresh = int(constants.robot_radius) + constants.robot_clearance
         self.scaling = constants.scaling_factor
         self.black = (0, 0, 0)
         # Define length of edge of squares
@@ -59,22 +59,6 @@ class Map:
             # Draw the square on the map
             cv2.rectangle(img, top_corner, bottom_corner, self.black, -1)
 
-    def check_node_validity(self, x, y):
-        """
-        Method to check whether point lies within any obstacle
-        :param x: x-coordinate of the current node
-        :param y: y-coordinate of the current node
-        :return: false if point lies within any obstacle
-        """
-        # Check whether the current node lies within the map
-        if x >= self.width or y >= self.height:
-            return False
-        # Check whether the current node lies within any obstacle
-        elif self.check_img[y, x].all() == 0:
-            return False
-
-        return True
-
     def erode_image(self):
         """
         Get eroded image to check for obstacles considering the robot radius and clearance
@@ -85,10 +69,6 @@ class Map:
         # Erode map image for rigid robot
         self.draw_squares(eroded_img, self.thresh)
         self.draw_circle(eroded_img, self.thresh)
-        # if self.thresh:
-            # kernel_size = (self.thresh * 2) + 1
-            # erode_kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            # eroded_img = cv2.erode(eroded_img, erode_kernel, iterations=1)
 
         return eroded_img
 
