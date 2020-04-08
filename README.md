@@ -18,3 +18,12 @@ Clone the repository in your ROS workspace. Type
 cd ~/<ROS_Workspace>/src
 git clone https://github.com/urastogi885/a-star-turtlebot
 ```
+Launch the world. Type
+```
+cd ~/<ROS_Workspace>
+source devel/setup.bash
+catkin_make
+roslaunch a-star-turtlebot launcher.launch
+```
+
+This will open the world in Gazebo.
