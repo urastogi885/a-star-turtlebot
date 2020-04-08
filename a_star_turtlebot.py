@@ -4,24 +4,22 @@ from sys import argv
 from time import time
 # Import necessary custom-built classes and methods
 from utils.obstacle_space import Map
-from utils.constants import scaling_factor
+from utils.constants import scaling_factor, step_params
 from utils.explorer import Explorer, check_node_validity
 
 """
 Add various parameters as input arguments from user
-:param start_node_data: a tuple of 3 values: start coordinates and orientation
-:param goal_node_data: a tuple of 3 values: goal coordinates and orientation
-:param robot_params: a tuple of 2 values: robot radius and clearance
-:param step_params: a tuple of 2 values: step-size and angular step-size
-                    step-size: integer value from 1-10 for translation of the robot
-                    angular ste-size: angular step between each action (preferably an integer that is a factor of 180)
+:param start_node_data: a tuple of 3 values: start coordinates and orientation (x, y, theta)
+:param goal_node_data: a tuple of 2 values: goal coordinates (x, y)
+:param robot_params: a tuple of 2 values: RPM of left and right wheel respectively
+                     The RPMs make the robot differential-drive
 :param animation: 1 to generate video otherwise use 0
 """
-script, start_node_data, goal_node_data, step_params, animation = argv
+script, start_node_data, goal_node_data, robot_params, animation = argv
 
 if __name__ == '__main__':
     # Convert input arguments into their required data types and scale them according to the size of the map
-    step_params = tuple(ast.literal_eval(step_params))
+    robot_params = tuple(ast.literal_eval(robot_params))
     start_node_data = tuple(ast.literal_eval(start_node_data))
     start_node_data = (int(scaling_factor * start_node_data[1]), int(scaling_factor * start_node_data[0]),
                        start_node_data[2] // step_params[1])
@@ -38,7 +36,7 @@ if __name__ == '__main__':
         quit()
     # Initialize the explorer class to find the goal node
     # Initialize explorer only after checking start and goal points
-    explorer = Explorer(start_node_data, goal_node_data, int(scaling_factor * step_params[0]), step_params[1])
+    explorer = Explorer(start_node_data, goal_node_data, robot_params)
     # Get start time for exploration
     start_time = time()
     # Start exploration
