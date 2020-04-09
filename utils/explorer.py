@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from math import sqrt
 from queue import PriorityQueue
+from matplotlib.pyplot import plot
 # Import custom-built methods
 from utils import constants
 
@@ -26,29 +27,38 @@ def check_node_validity(check_img, x, y):
 
 
 class Explorer:
-    def __init__(self, start_node, goal_node, robot_rpm):
+    def __init__(self, start_node, goal_node, robot_rpm, map_img):
         """
         Initialize the explorer with a start node and final goal node
         :param start_node: a tuple of start coordinates and orientation provided by the user
         :param goal_node: a tuple of goal coordinates and orientation provided by the user
         :param robot_rpm: a tuple of 2 RPMs for 2 wheels
+        :param map_img: 2-d array with information of the map
         """
         # Store start and goal nodes
         self.start_node = start_node
         self.goal_node = goal_node
         # Store RPMs of robot
         self.robot_rpm = robot_rpm
+        self.map_img = map_img
         # Store angular step size and translation step size
-        self.step_size, self.step_theta = constants.step_params
+        self.step_theta = constants.angular_step
         # Store map dimensions
         self.map_size = constants.map_size[0], constants.map_size[1], (constants.total_angle // self.step_theta)
         # Define an empty list to store all generated nodes and path nodes
-        self.generated_nodes = []
+        # self.generated_nodes = []
         self.path_nodes = []
         # Define 3-D arrays to store information about generated nodes and parent nodes
         self.parent = np.full(fill_value=constants.no_parent, shape=self.map_size)
         # Define a 3-D array to store base cost of each node
         self.base_cost = np.full(fill_value=constants.no_parent, shape=self.map_size)
+        # Define grey
+        self.grey = (128, 128, 128)
+        print(type(self.map_img), self.map_img.shape)
+        # Define video-writer of open-cv to record the exploration and final path
+        video_format = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+        self.video_output = cv2.VideoWriter('video_animation.avi', video_format, 200.0,
+                                            (self.map_size[1], self.map_size[0]))
 
     def get_heuristic_score(self, node):
         """
@@ -86,7 +96,6 @@ class Explorer:
         :param action: Varies from 0-7 to call one of the 8 defined actions
         :return: a tuple of left and right wheel RPM
         """
-
         if action == 0:
             return 0, self.robot_rpm[0]
         elif action == 1:
@@ -112,32 +121,34 @@ class Explorer:
         :param action: Varies from 0-n to call one of the 8 defined actions
         :return: new coordinates and orientation of the node after the desired action
         """
-        # Get parent orientation in degrees
-        theta = parent_node[2] * self.step_theta
+        # Get parent coordinates and orientation in radians
+        y, x = parent_node[0], parent_node[1]
+        theta = np.pi * parent_node[2] * self.step_theta / 180
         # Get action to be performed on parent to generate child
         rpm = self.action_space(action)
-        # Get Change in orientation in radians
-        d_theta = (constants.robot_radius / constants.wheel_distance) * (rpm[1] - rpm[0]) * constants.time_step
-        if d_theta > 2 * np.pi:
-            n = int(d_theta / (2 * np.pi))
-            d_theta = d_theta - n * 2 * np.pi
-        elif d_theta < 0:
-            d_theta = abs(d_theta)
-            if d_theta > 2 * np.pi:
-                n = int(d_theta / (2 * np.pi))
-                d_theta = d_theta - n * 2 * np.pi
-        # Get change in movement of robot in x, y direction
-        d_x = (constants.robot_radius / 2) * (rpm[0] + rpm[1]) * np.cos(np.pi * theta / 180) * constants.time_step
-        d_y = (constants.robot_radius / 2) * (rpm[0] + rpm[1]) * np.sin(np.pi * theta / 180) * constants.time_step
+        # Convert rpm into left and right wheel velocities respectively
+        lw_velocity = rpm[0] * (constants.robot_radius + (0.5 * constants.wheel_distance))
+        rw_velocity = rpm[1] * (constants.robot_radius - (0.5 * constants.wheel_distance))
+        self.show_exploration(parent_node, x, y, theta, lw_velocity, rw_velocity)
         # Get orientation of child node in degrees
-        theta = theta + (180 * d_theta / np.pi)
+        if theta >= 2 * np.pi:
+            n = int(theta / (2 * np.pi))
+            theta = theta - n * 2 * np.pi
+        elif theta < 0:
+            theta = abs(theta)
+            if theta > 2 * np.pi:
+                n = int(theta / (2 * np.pi))
+                theta = theta - n * 2 * np.pi
+        theta = theta + (180 * theta / np.pi)
+        # if theta > constants.total_angle:
+        #     theta = theta - constants.total_angle
         # Return the coordinates and orientation of the child node
-        return parent_node[0] + int(d_y), parent_node[1] + int(d_x), int(theta) // self.step_theta
+        return y, x, int(theta / self.step_theta)
 
-    def explore(self, map_img):
+    def explore(self, check_img):
         """
         Method to explore the map to find the goal
-        :param map_img: 2-d array with information of the map
+        :param check_img: 2-d array with information of the map and clearance thresholds
         :return: nothing
         """
         # Initialize priority queue
@@ -145,7 +156,7 @@ class Explorer:
         # Add cost-to-come of start node in the array
         # Start node has a cost-to-come of 0
         self.base_cost[self.start_node[0]][self.start_node[1]][self.start_node[2]] = 0
-        self.generated_nodes.append(self.start_node)
+        # self.generated_nodes.append(self.start_node)
         self.parent[self.start_node[0]][self.start_node[1]][self.start_node[2]] = constants.start_parent
         # Add start node to priority queue
         node_queue.put((self.get_final_weight(self.start_node), self.start_node))
@@ -163,13 +174,12 @@ class Explorer:
                 # Get coordinates of child node
                 y, x, theta = self.take_action(current_node[1], i)
                 # Check whether child node is not within obstacle space and has not been previously generated
-                if (check_node_validity(map_img, x, self.map_size[0] - y) and
+                if (check_node_validity(check_img, x, self.map_size[0] - y) and
                         self.parent[y][x][theta] == constants.no_parent):
                     # Update cost-to-come of child node
                     self.base_cost[y][x][theta] = self.get_child_base_cost(current_node[1], (y, x, theta))
                     # Add child node to priority queue
                     node_queue.put((self.get_final_weight((y, x, theta)), (y, x, theta)))
-                    self.generated_nodes.append((y, x, theta))
                     # Update parent of the child node
                     self.parent[y][x][theta] = np.ravel_multi_index([current_node[1][0], current_node[1][1],
                                                                      current_node[1][2]], dims=self.map_size)
@@ -191,44 +201,26 @@ class Explorer:
 
         return True
 
-    def show_exploration(self, map_img):
+    def show_exploration(self, parent_node, x, y, theta, l_vel, r_vel):
         """
         Show animation of map exploration and path from start to goal
-        :param map_img: 2-d array with information of the map
         :return: nothing
         """
-        # Define open-cv video recorder to save animation
-        video_format = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
-        video_output = cv2.VideoWriter('video_animation.avi', video_format, 100.0, (self.map_size[1], self.map_size[0]))
-        # Define colors to be used to show exploration and final path
-        red = [0, 0, 255]
-        blue = [255, 0, 0]
-        green = [0, 255, 0]
-        grey = [200, 200, 200]
-        # Skip start node element
-        skip_first = True
-        # Show all generated nodes
-        for y, x, theta in self.generated_nodes:
-            if skip_first:
-                skip_first = False
-                continue
-            parent_node = np.unravel_index(self.parent[y][x][theta], dims=self.map_size)
-            cv2.arrowedLine(map_img, (parent_node[1], self.map_size[0] - parent_node[0]),
-                            (x, self.map_size[0] - y), grey)
-            video_output.write(map_img)
-        # Back-track to find path from start to goal
-        if self.generate_path():
-            # Show path
-            for i in range(len(self.path_nodes) - 1, 0, -1):
-                cv2.line(map_img, (self.path_nodes[i - 1][1], self.map_size[0] - self.path_nodes[i - 1][0]),
-                         (self.path_nodes[i][1], self.map_size[0] - self.path_nodes[i][0]), blue)
-                video_output.write(map_img)
-            # Draw start and goal node to the video frame in the form of filled circle
-            cv2.circle(map_img, (self.path_nodes[-1][1], self.map_size[0] - self.path_nodes[-1][0]),
-                       constants.robot_diameter, red, -1)
-            cv2.circle(map_img, (self.path_nodes[0][1], self.map_size[0] - self.path_nodes[0][0]),
-                       constants.robot_diameter, green, -1)
-            for _ in range(1000):
-                video_output.write(map_img)
-        video_output.release()
-        cv2.destroyAllWindows()
+        t = 0
+        while t < constants.total_time:
+            t += constants.time_step
+            # Get new  coordinates and orientation using time step
+            x += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.cos(theta) * constants.time_step)
+            y += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.sin(theta) * constants.time_step)
+            theta += ((constants.robot_radius / constants.wheel_distance) * (r_vel - l_vel) *
+                      constants.time_step)
+            # Plot curve on map
+            # cv2.line(self.map_img, (parent_node[1], self.map_img[0] - parent_node[0]),
+            #          (x, self.map_size[0] - y), color=self.grey)
+            cv2.arrowedLine(self.map_img, (parent_node[1], self.map_img[0] - parent_node[0]),
+                            (x, self.map_size[0] - y), self.grey)
+            self.video_output.write(self.map_img)
+        return x, y, theta
+
+    def get_grey(self):
+        return np.int(self.grey)
