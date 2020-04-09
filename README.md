@@ -23,7 +23,7 @@ Launch the world. Type
 cd ~/<ROS_Workspace>
 source devel/setup.bash
 catkin_make
-export TURTLEBOT3=burger
+export TURTLEBOT3_MODEL=burger
 roslaunch a-star-turtlebot launcher.launch
 ```
 
