@@ -28,16 +28,11 @@ Gazebo on your system.
 cd ~/<ROS_Workspace>/src
 git clone https://github.com/urastogi885/a-star-turtlebot
 ```
-- Launch the world and spawn turtlebot. Type
+- Launch the world, spawn turtlebot, navigate it to the desired goal point. Type
 ```
 cd ~/<ROS_Workspace>
 source devel/setup.bash
 catkin_make
 export TURTLEBOT3_MODEL=burger
 roslaunch a-star-turtlebot launcher.launch
-```
-- Run the turtlebot to the desired goal point. Open a new terminal, navigate to your ROS workspace and type
-```
-source devel/setup.bash
-rosrun a-star-turtlebot planner.py
 ```
