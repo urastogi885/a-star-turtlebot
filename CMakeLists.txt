@@ -27,7 +27,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS})
 
 install(PROGRAMS
-  scripts/
+  scripts/planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
