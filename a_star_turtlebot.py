@@ -17,16 +17,16 @@ Add various parameters as input arguments from user
 script, start_node_data, goal_node_data, robot_params = argv
 
 if __name__ == '__main__':
-    # Convert input arguments into their required data types and scale them according to the size of the map
+    # Convert input arguments into tuples
     robot_params = tuple(ast.literal_eval(robot_params))
     start_node_data = tuple(ast.literal_eval(start_node_data))
-    start_node_data = (int(scaling_factor * start_node_data[1]), int(scaling_factor * start_node_data[0]),
-                       start_node_data[2] // angular_step)
     goal_node_data = tuple(ast.literal_eval(goal_node_data))
-    goal_node_data = (int(scaling_factor * goal_node_data[1]), int(scaling_factor * goal_node_data[0]), 0)
-    # Initialize the map class
+    # Initialize the map class and get map image to check for obstacles
     obstacle_map = Map(robot_params[2])
     check_image = obstacle_map.check_img
+    # Convert start and goal nodes given by user into coordinates from map frame
+    start_node_data = obstacle_map.get_position_in_map((start_node_data[0], start_node_data[1]), start_node_data[2])
+    goal_node_data = obstacle_map.get_position_in_map(goal_node_data)
     # Check validity of start and goal nodes
     if not (check_node_validity(check_image, start_node_data[1], obstacle_map.height - start_node_data[0])
             and check_node_validity(check_image, goal_node_data[1], obstacle_map.height - goal_node_data[0])):
@@ -34,6 +34,9 @@ if __name__ == '__main__':
         quit()
     # Initialize the explorer class to find the goal node
     # Initialize explorer only after checking start and goal points
-    explorer = Explorer(start_node_data, goal_node_data, (robot_params[0], robot_params[1]), obstacle_map.map_img)
+    explorer = Explorer(start_node_data, goal_node_data, (robot_params[0], robot_params[1]),
+                        (obstacle_map.map_img, check_image))
     # Start exploration
-    explorer.explore(check_image)
+    start_time = time()
+    explorer.explore()
+    print('Exploration time:', time() - start_time)
