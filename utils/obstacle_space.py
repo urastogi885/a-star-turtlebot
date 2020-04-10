@@ -88,3 +88,17 @@ class Map:
             cv2.imwrite('images/map.png', self.map_img)
 
         return self.map_img
+
+    def get_position_in_map(self, point, theta=0):
+        x, y = point
+        theta = theta // constants.angular_step
+        x, y = constants.map_center[1] + int(self.scaling * x), constants.map_center[1] + int(self.scaling * y)
+        # if x >= 0:
+        #     x = constants.map_center[1] + x
+        # else:
+        #     x = abs(x)
+        # if y >= 0:
+        #     y = constants.map_center[0] + y
+        # else:
+        #     y = abs(y)
+        return y, x, theta
