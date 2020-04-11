@@ -5,6 +5,7 @@ from math import sqrt
 from queue import PriorityQueue
 # Import custom-built methods
 from utils import constants
+from utils.node import Node
 
 
 def check_node_validity(check_img, x, y):
@@ -25,17 +26,32 @@ def check_node_validity(check_img, x, y):
     return True
 
 
+def get_euclidean_distance(first_node, second_node):
+    return sqrt((second_node[0] - first_node[0]) ** 2 + (second_node[1] - first_node[1]) ** 2)
+
+
+def get_base_cost(parent_node, child_node):
+    """
+    Get base cost of child node
+    :param parent_node: a tuple of parent node coordinates and orientation
+    :param child_node: a tuple of child node coordinates and orientation
+    :return: parent cost + euclidean distance between parent node and child node
+    """
+    # Self-data contains coordinates of the parent node as a tuple
+    return parent_node.base_weight + get_euclidean_distance(parent_node.get_data(), child_node)
+
+
 class Explorer:
     def __init__(self, start_node, goal_node, robot_rpm, map_img):
         """
         Initialize the explorer with a start node and final goal node
-        :param start_node: a tuple of start coordinates and orientation provided by the user
-        :param goal_node: a tuple of goal coordinates and orientation provided by the user
+        :param start_node: a list of start coordinates and orientation provided by the user
+        :param goal_node: a list of goal coordinates and orientation provided by the user
         :param robot_rpm: a tuple of 2 RPMs for 2 wheels
         :param map_img: a tuple of 2-d arrays with information of the map
         """
         # Store start and goal nodes
-        self.start_node = start_node
+        self.start_node = Node(start_node, None, 0, 0, None)
         self.goal_node = goal_node
         # Store RPMs of robot
         self.robot_rpm = robot_rpm
@@ -46,17 +62,15 @@ class Explorer:
         # Store map dimensions
         self.map_size = constants.map_size[0], constants.map_size[1], (constants.total_angle // self.step_theta)
         # Define an empty list to store all generated nodes and path nodes
-        # self.generated_nodes = []
+        self.closed_nodes = []
         self.path_nodes = []
         # Define 3-D arrays to store information about generated nodes and parent nodes
         self.parent = np.full(fill_value=constants.no_parent, shape=self.map_size)
-        # Define a 3-D array to store base cost of each node
-        self.base_cost = np.full(fill_value=constants.no_parent, shape=self.map_size)
         # Define grey
         self.grey = [128, 128, 128]
         # Define video-writer of open-cv to record the exploration and final path
         video_format = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
-        self.video_output = cv2.VideoWriter('video_output_1.mp4', video_format, 600.0,
+        self.video_output = cv2.VideoWriter('video_output.mp4', video_format, 600.0,
                                             (self.map_size[1], self.map_size[0]))
 
     def get_heuristic_score(self, node):
@@ -67,7 +81,7 @@ class Explorer:
         :return: distance between the goal node and current node
         """
         # Evaluate euclidean distance between goal node and current node and return it
-        return sqrt((self.goal_node[0] - node[0])**2 + (self.goal_node[1] - node[1])**2)
+        return get_euclidean_distance(self.goal_node, node)
 
     def get_final_weight(self, node):
         """
@@ -76,18 +90,22 @@ class Explorer:
         :return: final weight for according to method
         """
         # Add cost-to-goal and cost-to-come to get final cost and return it
-        return self.get_heuristic_score(node) + self.base_cost[node[0]][node[1]][node[2]]
+        return self.get_heuristic_score(node.get_data()) + get_base_cost(node.get_parent(), node.get_data())
 
-    def get_child_base_cost(self, parent_node, child_node):
-        """
-        Get base cost of child node
-        :param parent_node: a tuple of parent node coordinates and orientation
-        :param child_node: a tuple of child node coordinates and orientation
-        :return: parent cost + euclidean distance between parent node and child node
-        """
-        # Self-data contains coordinates of the parent node as a tuple
-        return (self.base_cost[parent_node[0]][parent_node[1]][parent_node[2]] +
-                sqrt((child_node[0] - parent_node[0]) ** 2 + (child_node[1] - parent_node[1]) ** 2))
+    def get_orientation_index(self, theta):
+        # Get orientation of child node in degrees
+        if theta >= 2 * np.pi:
+            n = int(theta / (2 * np.pi))
+            theta = theta - n * 2 * np.pi
+        elif theta < 0:
+            theta = abs(theta)
+            if theta > 2 * np.pi:
+                n = int(theta / (2 * np.pi))
+                theta = theta - n * 2 * np.pi
+        theta = theta + (180 * theta / np.pi)
+        if theta > constants.total_angle:
+            theta = theta - constants.total_angle
+        return int(theta / self.step_theta)
 
     def action_space(self, action):
         """
@@ -121,31 +139,15 @@ class Explorer:
         :return: new coordinates and orientation of the node after the desired action
         """
         # Get parent coordinates and orientation in radians
-        y, x = parent_node[0], parent_node[1]
-        theta = np.pi * parent_node[2] * self.step_theta / 180
+        parent_node_data = parent_node.get_data()
+        y, x = parent_node_data[0], parent_node_data[1]
+        theta = np.pi * parent_node_data[2] * self.step_theta / 180
         # Get action to be performed on parent to generate child
         rpm = self.action_space(action)
         # Convert rpm into left and right wheel velocities respectively
         lw_velocity = rpm[0] * (constants.robot_radius + (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
         rw_velocity = rpm[1] * (constants.robot_radius - (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
-        child_node = self.show_exploration(parent_node, x, y, theta, lw_velocity, rw_velocity)
-        if child_node is not None:
-            x, y, theta = child_node
-            # Get orientation of child node in degrees
-            if theta >= 2 * np.pi:
-                n = int(theta / (2 * np.pi))
-                theta = theta - n * 2 * np.pi
-            elif theta < 0:
-                theta = abs(theta)
-                if theta > 2 * np.pi:
-                    n = int(theta / (2 * np.pi))
-                    theta = theta - n * 2 * np.pi
-            theta = theta + (180 * theta / np.pi)
-            if theta > constants.total_angle:
-                theta = theta - constants.total_angle
-            # Return the coordinates and orientation of the child node
-            return y, x, int(theta / self.step_theta)
-        return None
+        return self.show_exploration(parent_node, x, y, theta, lw_velocity, rw_velocity)
 
     def explore(self):
         """
@@ -154,55 +156,27 @@ class Explorer:
         """
         # Initialize priority queue
         node_queue = PriorityQueue()
-        # Add cost-to-come of start node in the array
-        # Start node has a cost-to-come of 0
-        self.base_cost[self.start_node[0]][self.start_node[1]][self.start_node[2]] = 0
-        # self.generated_nodes.append(self.start_node)
-        self.parent[self.start_node[0]][self.start_node[1]][self.start_node[2]] = constants.start_parent
+        start_node = self.start_node.get_data()
+        self.parent[int(start_node[0])][int(start_node[1])][int(start_node[2])] = constants.start_parent
         # Add start node to priority queue
-        node_queue.put((self.get_final_weight(self.start_node), self.start_node))
+        node_queue.put(self.start_node)
         # Start exploring
         while not node_queue.empty():
             # Get node with minimum total cost
             current_node = node_queue.get()
+            self.closed_nodes.append(current_node)
             # Add node to generated nodes array
             # Check for goal node
-            if self.get_heuristic_score(current_node[1]) <= constants.goal_thresh or current_node[1] == self.goal_node:
-                self.path_nodes.append(current_node[1])
+            if (self.get_heuristic_score(current_node.data) <= constants.goal_thresh or
+                    current_node.get_data() == self.goal_node):
+                self.path_nodes.append(current_node)
                 break
             # Generate child nodes from current node
             for i in range(constants.max_actions):
-                child_node = self.take_action(current_node[1], i)
+                child_node = self.take_action(current_node, i)
                 if child_node is not None:
-                    # Get coordinates of child node
-                    y, x, theta = child_node
-                    # Check whether child node is not within obstacle space and has not been previously generated
-                    if (check_node_validity(self.check_img, x, self.map_size[0] - y) and
-                            self.parent[y][x][theta] == constants.no_parent):
-                        # Update cost-to-come of child node
-                        self.base_cost[y][x][theta] = self.get_child_base_cost(current_node[1], (y, x, theta))
-                        # Add child node to priority queue
-                        node_queue.put((self.get_final_weight((y, x, theta)), (y, x, theta)))
-                        # Update parent of the child node
-                        self.parent[y][x][theta] = np.ravel_multi_index([current_node[1][0], current_node[1][1],
-                                                                         current_node[1][2]], dims=self.map_size)
-
-    def generate_path(self):
-        """
-        Generate path using back-tracking
-        :return: a list containing path nodes
-        """
-        if not len(self.path_nodes):
-            print('No path found')
-            return False
-        last_node = self.path_nodes[0]
-        # Iterate until we reach the initial node
-        while self.parent[last_node[0]][last_node[1]][last_node[2]] != constants.start_parent:
-            # Search for parent node in the list of closed nodes
-            last_node = np.unravel_index(self.parent[last_node[0]][last_node[1]][last_node[2]], dims=self.map_size)
-            self.path_nodes.append(last_node)
-
-        return True
+                    # Add child node to priority queue
+                    node_queue.put(child_node)
 
     def show_exploration(self, parent_node, x, y, theta, l_vel, r_vel):
         """
@@ -212,26 +186,79 @@ class Explorer:
         # An empty list to store intermediate nodes
         inter_nodes = []
         valid_path = True
-        prev_x, prev_y = parent_node[1], parent_node[0]
+        parent_node_data = parent_node.get_data()
+        prev_x, prev_y, prev_theta = parent_node_data[1], parent_node_data[0], parent_node_data[2]
         t = 0
         while t < constants.total_time:
+            # Increment time
             t += constants.time_step
             # Get new  coordinates and orientation using time step
-            x += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.cos(theta) * constants.time_step)
-            y += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.sin(theta) * constants.time_step)
+            x += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.cos(theta) * constants.time_step *
+                  constants.time_scaling)
+            y += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.sin(theta) * constants.time_step *
+                  constants.time_scaling)
             theta += ((constants.robot_radius / constants.wheel_distance) * (r_vel - l_vel) *
-                      constants.time_step)
-            if check_node_validity(self.check_img, int(x), int(y)):
+                      constants.time_step * constants.time_scaling)
+            theta_index = self.get_orientation_index(theta)
+            if (check_node_validity(self.check_img, int(x), self.map_size[0] - int(y)) and
+                    self.parent[int(y)][int(x)][theta_index] == constants.no_parent):
                 # Plot curve on map
-                inter_nodes.append(((int(prev_y), int(prev_x)), (int(y), int(x))))
-                prev_x, prev_y = x, y
+                inter_nodes.append(([prev_y, prev_x, prev_theta], [y, x, theta]))
+                prev_x, prev_y, prev_theta = x, y, theta
             else:
                 valid_path = False
                 break
         if valid_path:
-            for prev_node, current_node in inter_nodes:
-                cv2.arrowedLine(self.map_img, (prev_node[1], self.map_size[0] - prev_node[0]),
-                                (current_node[1], self.map_size[0] - current_node[0]), self.grey)
+            last_node = None
+            len_inter_nodes = len(inter_nodes)
+            for i in range(len_inter_nodes):
+                prev_node, current_node = inter_nodes[i]
+                # Get orientation of child node in degrees
+                prev_node[2] = self.get_orientation_index(prev_node[2])
+                current_node[2] = self.get_orientation_index(current_node[2])
+                # Update parent of the child node
+                self.parent[int(current_node[0])][int(current_node[1])][int(current_node[2])] = \
+                    np.ravel_multi_index([int(prev_node[0]), int(prev_node[1]), int(prev_node[2])], dims=self.map_size)
+                cv2.arrowedLine(self.map_img, (int(prev_node[1]), self.map_size[0] - int(prev_node[0])),
+                                (int(current_node[1]), self.map_size[0] - int(current_node[0])), self.grey)
                 self.video_output.write(self.map_img)
-            return int(x), int(y), theta
+                if i == len_inter_nodes - 1:
+                    last_node = Node(current_node, parent_node, float('inf'), float('inf'), inter_nodes)
+                    last_node.set_base_weight(get_base_cost(parent_node, current_node))
+                    last_node.set_weight(self.get_final_weight(last_node))
+            return last_node
         return None
+
+    def generate_path(self):
+        """
+        Generate path using back-tracking
+        :return: a list containing path nodes
+        """
+        if not len(self.path_nodes):
+            print('No path found')
+            return False
+        red = [0, 0, 255]
+        blue = [255, 0, 0]
+        green = [0, 255, 0]
+        last_node = self.path_nodes[0]
+        # print(np.where(self.parent == constants.start_parent))
+        print('Finding path...')
+        # Iterate until we reach the initial node
+        while (self.parent[last_node[0]][last_node[1]][last_node[2]] != constants.start_parent or
+               last_node != self.start_node):
+            # Search for parent node in the list of closed nodes
+            last_node = np.unravel_index(self.parent[last_node[0]][last_node[1]][last_node[2]], dims=self.map_size)
+            self.path_nodes.append(last_node)
+        # Show path
+        for i in range(len(self.path_nodes) - 1, 0, -1):
+            cv2.line(self.map_img, (self.path_nodes[i - 1][1], self.map_size[0] - self.path_nodes[i - 1][0]),
+                     (self.path_nodes[i][1], self.map_size[0] - self.path_nodes[i][0]), blue)
+            self.video_output.write(self.map_img)
+        # Draw start and goal node to the video frame in the form of filled circle
+        cv2.circle(self.map_img, (self.path_nodes[-1][1], self.map_size[0] - self.path_nodes[-1][0]),
+                   constants.robot_radius, red, -1)
+        cv2.circle(self.map_img, (self.path_nodes[0][1], self.map_size[0] - self.path_nodes[0][0]),
+                   constants.robot_radius, green, -1)
+        for _ in range(1000):
+            self.video_output.write(self.map_img)
+        return True
