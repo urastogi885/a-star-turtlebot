@@ -11,6 +11,7 @@ map_center = (map_size[0] // 2), (map_size[1] // 2)
 robot_diameter = 21
 robot_radius = robot_diameter / 2
 wheel_distance = 16
+wheel_radius = 3.3
 # Define the maximum no. of possible actions
 max_actions = 8
 # Robot moves by 1 unit (cm): translation-step
