@@ -40,3 +40,6 @@ if __name__ == '__main__':
     start_time = time()
     explorer.explore()
     print('Exploration time:', time() - start_time)
+    # start_time = time()
+    # explorer.generate_path()
+    # print('Path Generation Time:', time() - start_time)
