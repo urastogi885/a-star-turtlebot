@@ -83,14 +83,15 @@ class Explorer:
         # Evaluate euclidean distance between goal node and current node and return it
         return get_euclidean_distance(self.goal_node, node)
 
-    def get_final_weight(self, node):
+    def get_final_weight(self, node, base_cost):
         """
         Get final weight for a-star
         :param node: tuple containing coordinates and orientation of the current node
+        :param base_cost: base cost of the current node
         :return: final weight for according to method
         """
         # Add cost-to-goal and cost-to-come to get final cost and return it
-        return self.get_heuristic_score(node.get_data()) + get_base_cost(node.get_parent(), node.get_data())
+        return self.get_heuristic_score(node) + base_cost
 
     def get_orientation_index(self, theta):
         # Get orientation of child node in degrees
@@ -167,7 +168,7 @@ class Explorer:
             self.closed_nodes.append(current_node)
             # Add node to generated nodes array
             # Check for goal node
-            if (self.get_heuristic_score(current_node.data) <= constants.goal_thresh or
+            if (self.get_heuristic_score(current_node.get_data()) <= constants.goal_thresh or
                     current_node.get_data() == self.goal_node):
                 self.path_nodes.append(current_node)
                 break
@@ -223,9 +224,9 @@ class Explorer:
                                 (int(current_node[1]), self.map_size[0] - int(current_node[0])), self.grey)
                 self.video_output.write(self.map_img)
                 if i == len_inter_nodes - 1:
-                    last_node = Node(current_node, parent_node, float('inf'), float('inf'), inter_nodes)
+                    last_node = Node(current_node, parent_node_data, float('inf'), float('inf'), inter_nodes)
                     last_node.set_base_weight(get_base_cost(parent_node, current_node))
-                    last_node.set_weight(self.get_final_weight(last_node))
+                    last_node.set_weight(self.get_final_weight(current_node, last_node.base_weight))
             return last_node
         return None
 
@@ -244,21 +245,25 @@ class Explorer:
         # print(np.where(self.parent == constants.start_parent))
         print('Finding path...')
         # Iterate until we reach the initial node
-        while (self.parent[last_node[0]][last_node[1]][last_node[2]] != constants.start_parent or
-               last_node != self.start_node):
-            # Search for parent node in the list of closed nodes
-            last_node = np.unravel_index(self.parent[last_node[0]][last_node[1]][last_node[2]], dims=self.map_size)
-            self.path_nodes.append(last_node)
+        while last_node.get_data() != self.start_node.get_data():
+            for node in self.closed_nodes:
+                if node.get_data() == last_node.get_parent():
+                    self.path_nodes.append(node)
+                    last_node = node
+                    break
+        print('Path found')
         # Show path
         for i in range(len(self.path_nodes) - 1, 0, -1):
-            cv2.line(self.map_img, (self.path_nodes[i - 1][1], self.map_size[0] - self.path_nodes[i - 1][0]),
-                     (self.path_nodes[i][1], self.map_size[0] - self.path_nodes[i][0]), blue)
+            prev_node_data = self.path_nodes[i - 1].get_data()
+            current_node_data = self.path_nodes[i].get_data()
+            cv2.line(self.map_img, (int(prev_node_data[1]), self.map_size[0] - int(prev_node_data[0])),
+                     (int(current_node_data[1]), self.map_size[0] - int(current_node_data[0])), blue)
             self.video_output.write(self.map_img)
         # Draw start and goal node to the video frame in the form of filled circle
-        cv2.circle(self.map_img, (self.path_nodes[-1][1], self.map_size[0] - self.path_nodes[-1][0]),
-                   constants.robot_radius, red, -1)
-        cv2.circle(self.map_img, (self.path_nodes[0][1], self.map_size[0] - self.path_nodes[0][0]),
-                   constants.robot_radius, green, -1)
+        cv2.circle(self.map_img, (int(self.path_nodes[-1].data[1]), self.map_size[0] - int(self.path_nodes[-1].data[0])),
+                   int(constants.robot_radius), red, -1)
+        cv2.circle(self.map_img, (int(self.path_nodes[0].data[1]), self.map_size[0] - int(self.path_nodes[0].data[0])),
+                   int(constants.robot_radius), green, -1)
         for _ in range(1000):
             self.video_output.write(self.map_img)
         return True
