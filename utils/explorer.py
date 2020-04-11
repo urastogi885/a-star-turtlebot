@@ -75,8 +75,8 @@ class Explorer:
         # Define 3-D arrays to store information about generated nodes and parent nodes
         self.parent = np.full(fill_value=constants.no_parent, shape=self.map_size)
         # Define video-writer of open-cv to record the exploration and final path
-        video_format = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
-        self.video_output = cv2.VideoWriter('video_output.mp4', video_format, 600.0,
+        video_format = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+        self.video_output = cv2.VideoWriter('video_output.avi', video_format, 200.0,
                                             (self.map_size[1], self.map_size[0]))
 
     def get_heuristic_score(self, node):
@@ -301,6 +301,6 @@ class Explorer:
         cv2.circle(self.map_img, (int(self.path_nodes[0].data[1]), self.map_size[0] - int(self.path_nodes[0].data[0])),
                    int(constants.robot_radius), green, -1)
         # Show path for longer time
-        for _ in range(5000):
+        for _ in range(1000):
             self.video_output.write(self.map_img)
         return True
