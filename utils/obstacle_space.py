@@ -100,4 +100,4 @@ class Map:
         theta = theta // constants.angular_step
         # Scale the coordinates and convert them into map frame
         x, y = constants.map_center[1] + int(self.scaling * x), constants.map_center[1] + int(self.scaling * y)
-        return y, x, theta
+        return list((y, x, theta))
