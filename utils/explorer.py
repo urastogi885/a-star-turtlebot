@@ -286,7 +286,7 @@ class Explorer:
                     break
         print('Path found')
         # Iterate through path nodes
-        for i in range(len(self.path_nodes) - 1, 0, -1):
+        for i in range(len(self.path_nodes) - 2, -1, -1):
             # Get intermediate nodes of each node in path-nodes' list
             current_sub_nodes = self.path_nodes[i].get_sub_nodes()
             # Iterate through intermediate nodes' list to display path to be taken by the robot
@@ -301,6 +301,6 @@ class Explorer:
         cv2.circle(self.map_img, (int(self.path_nodes[0].data[1]), self.map_size[0] - int(self.path_nodes[0].data[0])),
                    int(constants.robot_radius), green, -1)
         # Show path for longer time
-        for _ in range(1000):
+        for _ in range(5000):
             self.video_output.write(self.map_img)
         return True
