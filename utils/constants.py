@@ -20,7 +20,7 @@ angular_step = 20
 # Define time between each movement and total time for each action
 time_step = 1
 total_time = 10
-time_scaling = 0.1
+time_scaling = 0.5
 # Define total angle of a complete circle
 total_angle = 360
 # Define exploration constants
