@@ -18,7 +18,7 @@ Phases 1 and 2 have been implemented on another [repository](https://github.com/
 ## For TAs
 
 - The following repositories contain implementation of both Phase-3 and Phase-4 of Project-3.
-- You can access the submission version from the [*release section*](https://github.com/namangupta98/a-star-turtlebot/releases)
+- You can access the submission version from the [*release section*](https://github.com/urastogi885/a-star-turtlebot/releases)
 
 ## Dependencies
 
