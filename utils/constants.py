@@ -1,8 +1,6 @@
 # Define minimum distance threshold in map
 dist_thresh = 0.01
 scaling_factor = int(1 / dist_thresh)
-# Define threshold around goal
-goal_thresh = int(scaling_factor * 0.1)
 # Define map size
 width, height = 10, 10
 map_size = (scaling_factor * height), (scaling_factor * width)
@@ -12,11 +10,13 @@ robot_diameter = 21
 robot_radius = robot_diameter / 2
 wheel_distance = 16
 wheel_radius = 3.3
+# Define threshold around goal
+goal_thresh = robot_radius
 # Define the maximum no. of possible actions
 max_actions = 8
 # Robot moves by 1 unit (cm): translation-step
 # Orientation of the robot is a multiple of angular-step
-angular_step = 30
+angular_step = 20
 # Define time between each movement and total time for each action
 time_step = 1
 total_time = 10
