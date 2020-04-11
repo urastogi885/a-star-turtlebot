@@ -146,8 +146,8 @@ class Explorer:
         # Get action to be performed on parent to generate child
         rpm = self.action_space(action)
         # Convert rpm into left and right wheel velocities respectively
-        lw_velocity = rpm[0] * (constants.robot_radius + (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
-        rw_velocity = rpm[1] * (constants.robot_radius - (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
+        lw_velocity = rpm[0] * (constants.wheel_radius + (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
+        rw_velocity = rpm[1] * (constants.wheel_radius - (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
         return self.show_exploration(parent_node, x, y, theta, lw_velocity, rw_velocity)
 
     def explore(self):
@@ -253,12 +253,13 @@ class Explorer:
                     break
         print('Path found')
         # Show path
-        for i in range(len(self.path_nodes) - 1, 0, -1):
-            prev_node_data = self.path_nodes[i - 1].get_data()
-            current_node_data = self.path_nodes[i].get_data()
-            cv2.line(self.map_img, (int(prev_node_data[1]), self.map_size[0] - int(prev_node_data[0])),
-                     (int(current_node_data[1]), self.map_size[0] - int(current_node_data[0])), blue)
-            self.video_output.write(self.map_img)
+        for i in range(len(self.path_nodes) - 2, 0, -1):
+            current_sub_nodes = self.path_nodes[i].get_sub_nodes()
+            for j in range(0, len(current_sub_nodes)):
+                current_node_data = current_sub_nodes[j]
+                cv2.line(self.map_img, (int(current_node_data[0][1]), self.map_size[0] - int(current_node_data[0][0])),
+                         (int(current_node_data[1][1]), self.map_size[0] - int(current_node_data[1][0])), blue)
+                self.video_output.write(self.map_img)
         # Draw start and goal node to the video frame in the form of filled circle
         cv2.circle(self.map_img, (int(self.path_nodes[-1].data[1]), self.map_size[0] - int(self.path_nodes[-1].data[0])),
                    int(constants.robot_radius), red, -1)
