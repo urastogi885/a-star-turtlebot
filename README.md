@@ -71,5 +71,5 @@ python3 a_star_turtlebot.py -4.75,-4.75,0 4.75,4.75 30,25,5
     quadrant your points lie.
     - Provide start and goal coordinates in meters while start orientation is to be provided in degrees.
     - In addition to that, clearance is taken in centimeters.
-    - Refer documentation of [*a_star_turtlebot.py*](https://github.com/urastogi885/a-star-robot/blob/master/a_star_robot.py) to
+    - Refer documentation of [*a_star_turtlebot.py*](https://github.com/urastogi885/a-star-turtlebot/blob/master/a_star_turtlebot.py) to
     understand further about input arguments.
