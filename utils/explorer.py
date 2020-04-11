@@ -157,8 +157,8 @@ class Explorer:
         # Get action to be performed on parent to generate child
         rpm = self.action_space(action)
         # Convert rpm into left and right wheel velocities respectively
-        lw_velocity = rpm[0] * (constants.wheel_radius + (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
-        rw_velocity = rpm[1] * (constants.wheel_radius - (0.5 * constants.wheel_distance)) * (2 * np.pi / 60)
+        lw_velocity = rpm[0] * (2 * np.pi / 60)
+        rw_velocity = rpm[1] * (2 * np.pi / 60)
         return self.get_child_node(parent_node, lw_velocity, rw_velocity)
 
     def explore(self):
@@ -203,7 +203,7 @@ class Explorer:
         inter_nodes = []
         valid_path = True
         # Define grey
-        grey = [128, 128, 128]
+        grey = [200, 200, 200]
         # Get coordinates  and orientation of parent node
         parent_node_data = parent_node.get_data()
         y, x = parent_node_data[0], parent_node_data[1]
@@ -214,11 +214,11 @@ class Explorer:
             # Increment time
             t += constants.time_step
             # Get new  coordinates and orientation using time step
-            x += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.cos(theta) * constants.time_step *
+            x += (0.5 * constants.wheel_radius * (l_vel + r_vel) * np.cos(theta) * constants.time_step *
                   constants.time_scaling)
-            y += (0.5 * constants.robot_radius * (l_vel + r_vel) * np.sin(theta) * constants.time_step *
+            y += (0.5 * constants.wheel_radius * (l_vel + r_vel) * np.sin(theta) * constants.time_step *
                   constants.time_scaling)
-            theta += ((constants.robot_radius / constants.wheel_distance) * (r_vel - l_vel) *
+            theta += ((constants.wheel_radius / constants.wheel_distance) * (r_vel - l_vel) *
                       constants.time_step * constants.time_scaling)
             # Get index of current orientation in grid world to check for parent
             theta_index = self.get_orientation_index(theta)
@@ -235,10 +235,14 @@ class Explorer:
         # Discard entire path if any intermediate point lies within obstacle space
         if valid_path:
             last_node = None
+            # Define base-cost of the child node
+            base_cost = parent_node.get_base_weight()
             len_inter_nodes = len(inter_nodes)
             # Add exploration to video
             for i in range(len_inter_nodes):
                 prev_node, current_node = inter_nodes[i]
+                # Update base-cost of the node
+                base_cost += get_euclidean_distance(prev_node, current_node)
                 # Get index of orientation of intermediate node
                 prev_node[2] = self.get_orientation_index(prev_node[2])
                 current_node[2] = self.get_orientation_index(current_node[2])
@@ -252,7 +256,7 @@ class Explorer:
                 # Make last node in the list as the child node and create is node class object
                 if i == len_inter_nodes - 1:
                     last_node = Node(current_node, parent_node_data, float('inf'), float('inf'), inter_nodes)
-                    last_node.set_base_weight(get_base_cost(parent_node, current_node))
+                    last_node.set_base_weight(base_cost)
                     last_node.set_weight(self.get_final_weight(current_node, last_node.base_weight))
             return last_node
         return None
@@ -282,7 +286,7 @@ class Explorer:
                     break
         print('Path found')
         # Iterate through path nodes
-        for i in range(len(self.path_nodes) - 2, 0, -1):
+        for i in range(len(self.path_nodes) - 1, 0, -1):
             # Get intermediate nodes of each node in path-nodes' list
             current_sub_nodes = self.path_nodes[i].get_sub_nodes()
             # Iterate through intermediate nodes' list to display path to be taken by the robot
