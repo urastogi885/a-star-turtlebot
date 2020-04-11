@@ -16,12 +16,27 @@ class Node:
         self.base_weight = base_cost
 
     def __eq__(self, other):
+        """
+        Override default comparison function to consider only node-weights
+        :param other: Other node class object for comparison
+        :return: bool value of whether weights of both node are equal
+        """
         return self.weight == other.weight
 
     def __lt__(self, other):
+        """
+        Method to compare nodes only based on node-weights
+        :param other: Other node class object for comparison
+        :return: bool value of whether weight of one node is less than other node
+        """
         return self.weight < other.weight
 
     def __gt__(self, other):
+        """
+        Method to compare nodes only based on node-weights
+        :param other: Other node class object for comparison
+        :return: bool value of whether weight of one node is greater than other node
+        """
         return self.weight > other.weight
 
     def get_data(self):
@@ -42,8 +57,28 @@ class Node:
         """
         return self.sub_nodes
 
+    def get_weight(self):
+        """
+        :return: final cost of the node (cost-to-come + cost-to-goal)
+        """
+        return self.weight
+
+    def get_base_weight(self):
+        """
+        :return: cost-to-come for the node
+        """
+        return self.base_weight
+
     def set_weight(self, node_weight):
+        """
+        :param node_weight:
+        :return: nothing
+        """
         self.weight = node_weight
 
     def set_base_weight(self, base_cost):
+        """
+        :param base_cost:
+        :return:
+        """
         self.base_weight = base_cost
