@@ -1,0 +1,33 @@
+<launch>
+	<!-- these are the arguments you can pass this launch file, for example paused:=true -->
+	<!-- <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type burger"/> -->
+	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  	<arg name="x_pos" default="-4.0"/>
+  	<arg name="y_pos" default="-4.25"/>
+  	<arg name="z_pos" default="0.0"/>
+  	<arg name="yaw" default="0.0"/>
+  	<arg name="node_start_delay" default="7.0" />
+
+	<!-- We resume the logic in empty_world.launch -->
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find a-star-turtlebot)/worlds/map.world"/>
+	</include>
+
+	<!-- <param name="TURTLEBOT3_MODEL" command="$(find xacro)/xacro inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+	<node name="mybot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+          args="-urdf -param TURTLEBOT3_MODEL -model my_robot" /> -->
+
+	<param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg yaw) -param robot_description" />
+
+  	<node 
+    	name = "planner" 
+    	pkg = "a-star-turtlebot" 
+    	type = "planner.py"
+    	launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' "
+  	/> 
+
+</launch>
