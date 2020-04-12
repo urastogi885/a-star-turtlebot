@@ -20,7 +20,7 @@ def runner(order):
     msg = Twist()
 
     for i in range(len(order)):
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(2)
 
         msg.linear.x = float(order[i][0])
         msg.angular.z = float(order[i][1])
