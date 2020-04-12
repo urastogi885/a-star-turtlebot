@@ -67,6 +67,7 @@ by following the instructions given on referenced web-page.
 Gazebo on your system.
 - If you wish to install Gazebo separately, then follow the instruction on the [Gazebo install page](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install).
 - Install Turtlebot-3 package and its dependencies using this [link](https://programmer.help/blogs/ubuntu-18.04-lts-melodic-ros-configuration-turtlebot-3-running-gazebo-simulation.html).
+- Note that Turtlebot-3 package is supported by ROS Melodic as well as Kinetic.
  
 ## Run Instructions
 
