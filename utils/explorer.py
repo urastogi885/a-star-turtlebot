@@ -48,7 +48,7 @@ def get_base_cost(parent_node, child_node):
 
 
 class Explorer:
-    def __init__(self, start_node, goal_node, robot_rpm, map_img):
+    def __init__(self, start_node, goal_node, robot_rpm, map_img, animation):
         """
         Initialize the explorer with a start node and final goal node
         :param start_node: a list of start coordinates and orientation provided by the user
@@ -59,6 +59,8 @@ class Explorer:
         # Store start and goal nodes
         self.start_node = Node(start_node, None, 0, 0, None)
         self.goal_node = goal_node
+        # Store animation
+        self.animation = animation
         # Store RPMs of robot
         self.robot_rpm = robot_rpm
         # Original map
@@ -209,6 +211,11 @@ class Explorer:
         y, x = parent_node_data[0], parent_node_data[1]
         theta = np.pi * parent_node_data[2] * self.step_theta / 180
         prev_y, prev_x, prev_theta = y, x, parent_node_data[2]
+        # Get linear and angular velocities in m/s and rad/s respectively
+        linear_x = 0.5 * constants.wheel_radius * (l_vel + r_vel) * np.cos(theta) / constants.scaling_factor
+        linear_y = 0.5 * constants.wheel_radius * (l_vel + r_vel) * np.sin(theta) / constants.scaling_factor
+        linear_vel = sqrt((linear_x ** 2) + (linear_y ** 2))
+        angular_vel = (constants.wheel_radius / constants.wheel_distance) * (r_vel - l_vel)
         t = 0
         while t < constants.total_time:
             # Increment time
@@ -226,7 +233,7 @@ class Explorer:
             if (check_node_validity(self.check_img, int(x), self.map_size[0] - int(y)) and
                     self.parent[int(y)][int(x)][theta_index] == constants.no_parent):
                 # Add intermediate to its list
-                inter_nodes.append(([prev_y, prev_x, prev_theta], [y, x, theta]))
+                inter_nodes.append(([prev_y, prev_x, prev_theta], [y, x, theta], [linear_vel, angular_vel]))
                 # Update previous coordinates and orientation
                 prev_x, prev_y, prev_theta = x, y, theta
             else:
@@ -240,7 +247,7 @@ class Explorer:
             len_inter_nodes = len(inter_nodes)
             # Add exploration to video
             for i in range(len_inter_nodes):
-                prev_node, current_node = inter_nodes[i]
+                prev_node, current_node, _ = inter_nodes[i]
                 # Update base-cost of the node
                 base_cost += get_euclidean_distance(prev_node, current_node)
                 # Get index of orientation of intermediate node
@@ -250,9 +257,10 @@ class Explorer:
                 self.parent[int(current_node[0])][int(current_node[1])][int(current_node[2])] = \
                     np.ravel_multi_index([int(prev_node[0]), int(prev_node[1]), int(prev_node[2])], dims=self.map_size)
                 # Add nodes to exploration video
-                cv2.arrowedLine(self.map_img, (int(prev_node[1]), self.map_size[0] - int(prev_node[0])),
-                                (int(current_node[1]), self.map_size[0] - int(current_node[0])), grey)
-                self.video_output.write(self.map_img)
+                if self.animation:
+                    cv2.arrowedLine(self.map_img, (int(prev_node[1]), self.map_size[0] - int(prev_node[0])),
+                                    (int(current_node[1]), self.map_size[0] - int(current_node[0])), grey)
+                    self.video_output.write(self.map_img)
                 # Make last node in the list as the child node and create is node class object
                 if i == len_inter_nodes - 1:
                     last_node = Node(current_node, parent_node_data, float('inf'), float('inf'), inter_nodes)
@@ -274,6 +282,8 @@ class Explorer:
         red = [0, 0, 255]
         blue = [255, 0, 0]
         green = [0, 255, 0]
+        # Open text file to write velocities
+        vel_txt = open('output_files/commander.txt', 'w+')
         # Get first node nearest to the goal node to start backtracking
         last_node = self.path_nodes[0]
         print('Finding path...')
@@ -292,15 +302,22 @@ class Explorer:
             # Iterate through intermediate nodes' list to display path to be taken by the robot
             for j in range(0, len(current_sub_nodes)):
                 current_node_data = current_sub_nodes[j]
-                cv2.line(self.map_img, (int(current_node_data[0][1]), self.map_size[0] - int(current_node_data[0][0])),
-                         (int(current_node_data[1][1]), self.map_size[0] - int(current_node_data[1][0])), blue)
+                vel_txt.write(str(current_node_data[2][0]) + ',' + str(current_node_data[2][1]) + '\n')
+                if self.animation:
+                    cv2.line(self.map_img,
+                             (int(current_node_data[0][1]), self.map_size[0] - int(current_node_data[0][0])),
+                             (int(current_node_data[1][1]), self.map_size[0] - int(current_node_data[1][0])),
+                             blue)
+                    self.video_output.write(self.map_img)
+        if self.animation:
+            # Draw start and goal node to the video frame in the form of filled circle
+            cv2.circle(self.map_img,
+                       (int(self.path_nodes[-1].data[1]), self.map_size[0] - int(self.path_nodes[-1].data[0])),
+                       int(constants.robot_radius), red, -1)
+            cv2.circle(self.map_img,
+                       (int(self.path_nodes[0].data[1]), self.map_size[0] - int(self.path_nodes[0].data[0])),
+                       int(constants.robot_radius), green, -1)
+            # Show path for longer time
+            for _ in range(1000):
                 self.video_output.write(self.map_img)
-        # Draw start and goal node to the video frame in the form of filled circle
-        cv2.circle(self.map_img, (int(self.path_nodes[-1].data[1]), self.map_size[0] - int(self.path_nodes[-1].data[0])),
-                   int(constants.robot_radius), red, -1)
-        cv2.circle(self.map_img, (int(self.path_nodes[0].data[1]), self.map_size[0] - int(self.path_nodes[0].data[0])),
-                   int(constants.robot_radius), green, -1)
-        # Show path for longer time
-        for _ in range(1000):
-            self.video_output.write(self.map_img)
         return True
