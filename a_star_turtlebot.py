@@ -14,7 +14,7 @@ Add various parameters as input arguments from user
 :param robot_params: a tuple of 3 values: 2 possible values for RPM and a clearance value for the robot
                      The RPMs make the robot differential-drive
 """
-script, start_node_data, goal_node_data, robot_params = argv
+script, start_node_data, goal_node_data, robot_params, animation = argv
 
 if __name__ == '__main__':
     # Convert input arguments into tuples
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Initialize the explorer class to find the goal node
     # Initialize explorer only after checking start and goal points
     explorer = Explorer(start_node_data, goal_node_data, (robot_params[0], robot_params[1]),
-                        (obstacle_map.map_img, check_image))
+                        (obstacle_map.map_img, check_image), int(animation))
     # Start exploration
     start_time = time()
     explorer.explore()
