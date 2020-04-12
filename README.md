@@ -9,7 +9,7 @@ world. We are using Turtlebot in ROS-Gazebo for the simulation.
 - Phase-1: Installation of ROS and V-REP
 - Phase-2: Implementation of A* on a non-holonomic robot
 - Phase-3: Implementation of A* on a differential-drive robot
-- Phase-4: Implementation of A* on Turtlebot using ROs
+- Phase-4: Implementation of A* on Turtlebot using ROS
 
 Phases 1 and 2 have been implemented on another [repository](https://github.com/urastogi885/a-star-robot)
 
