@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # read text file
     ros_root = rospkg.RosPack()
-    with open(ros_root.get_path('a-star-turtlebot') + '/commander.txt', 'r') as command:
+    with open(ros_root.get_path('a-star-turtlebot') + '/output_files/commander_2.txt', 'r') as command:
         orders = command.readlines()
 
     # convert into array
