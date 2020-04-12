@@ -20,10 +20,15 @@ def runner(order):
     msg = Twist()
 
     for i in range(len(order)):
+        rate = rospy.Rate(1)
+
         msg.linear.x = float(order[i][0])
         msg.angular.z = float(order[i][1])
-        print(msg)
+
+        rospy.loginfo(msg)
         pub.publish(msg)
+
+        rate.sleep()
 
 
 if __name__ == '__main__':
@@ -41,13 +46,11 @@ if __name__ == '__main__':
     with open(ros_root.get_path('a-star-turtlebot') + '/commander.txt', 'r') as command:
         orders = command.readlines()
 
-    rate = rospy.Rate(1)
     # convert into array
     orders = converter(orders)
     while True:
         # calling runner
         runner(orders)
-        rate.sleep()
 
     # runnning infinte times
-    rospy.spin()
+    # rospy.spin()
