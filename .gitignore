@@ -133,4 +133,3 @@ dmypy.json
 
 # Exclude readme file in text format
 readme.txt
-output_files/
