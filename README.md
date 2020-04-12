@@ -100,5 +100,16 @@ source devel/setup.bash
 catkin_make or catkin build (For ROS Melodic, you might have to use catkin build instead of catkin_make)
 export TURTLEBOT3_MODEL=burger
 roslaunch a-star-turtlebot launcher_1.launch
+```
+
+- Stop the execution, using ```Ctrl + C```. Do not close this terminal.
+- Open *planner.py* from the scripts folder, replace *commander_1.txt* by *commander_2.txt* in the main section of the file.
+- Essentially, the following line needs to be changed in *planner.py*:
+```
+with open(ros_root.get_path('a-star-turtlebot') + '/output_files/commander_1.txt', 'r') as command:
+```
+
+- From the same terminal, run:
+```
 roslaunch a-star-turtlebot launcher_2.launch
 ```
