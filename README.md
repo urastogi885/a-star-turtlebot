@@ -1,4 +1,6 @@
 # A-Star Algorithm on Turtlebot
+[![Build Status](https://travis-ci.org/urastogi885/a-star-turtlebot.svg?branch=master)](https://travis-ci.org/urastogi885/a-star-turtlebot)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/urastogi885/a-star-turtlebot/blob/master/LICENSE)
 
 ## Overview
 In this project, a-star algorithm is simulated on a differential drive (non-holonomic) mobile robot in a defined static 
