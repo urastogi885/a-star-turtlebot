@@ -18,4 +18,4 @@ install:
 
 # Run python scripts
 script:
-  - python3 a_star_turtlebot.py 0.25,0.25,0 9.75,9.75,0 0.5,30 1
+  - python3 a_star_turtlebot.py -4,-4.5,0 4.25,2.75 30,25,5 1
