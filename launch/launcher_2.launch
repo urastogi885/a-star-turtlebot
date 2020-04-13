@@ -2,7 +2,7 @@
 	<!-- these are the arguments you can pass this launch file, for example paused:=true -->
 	<arg name="model" default="burger"/>
   	<arg name="x_pos" default="-4.0"/>
-  	<arg name="y_pos" default="-4.25"/>
+  	<arg name="y_pos" default="-4.5"/>
   	<arg name="z_pos" default="0.0"/>
   	<arg name="yaw" default="0.0"/>
   	<arg name="node_start_delay" default="7.0" />
