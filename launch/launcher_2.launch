@@ -1,7 +1,6 @@
 <launch>
 	<!-- these are the arguments you can pass this launch file, for example paused:=true -->
-	<!-- <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type burger"/> -->
-	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+	<arg name="model" default="burger"/>
   	<arg name="x_pos" default="-4.0"/>
   	<arg name="y_pos" default="-4.25"/>
   	<arg name="z_pos" default="0.0"/>
