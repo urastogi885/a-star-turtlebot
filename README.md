@@ -98,7 +98,6 @@ python3 a_star_turtlebot.py -4,-4.5,0 4.25,2.75 30,25,5 0
 cd ~/<ROS_Workspace>
 source devel/setup.bash
 catkin_make or catkin build (For ROS Melodic, you might have to use catkin build instead of catkin_make)
-export TURTLEBOT3_MODEL=burger
 roslaunch a-star-turtlebot launcher_1.launch
 ```
 
