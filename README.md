@@ -1,17 +1,27 @@
-# A-Star Algorithm on Turtlebot
+# A-Star Turtlebot
 [![Build Status](https://travis-ci.org/urastogi885/a-star-turtlebot.svg?branch=master)](https://travis-ci.org/urastogi885/a-star-turtlebot)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/urastogi885/a-star-turtlebot/blob/master/LICENSE)
 
 ## Overview
 In this project, a-star algorithm is simulated on a differential drive (non-holonomic) mobile robot in a defined static 
-world. We are using Turtlebot in ROS-Gazebo for the simulation.
+world. We are using Turtlebot in ROS-Gazebo for the simulation. The project generates a text file containing linear and 
+angular velocities needed by the robot to reach its goal position. A ROS node publishes these velocities at regular 
+intervals to simulate Turtlebot's movement in Gazebo. A sample of the simulation from one end of the map to the other 
+is shown below.
 
+<p align="center">
+  <img src="https://github.com/urastogi885/a-star-turtlebot/blob/master/images/phase4.gif">
+  <br><b>Figure 1 - Turtlebot-3 Burger moving in known world using velocities provided by A* planner</b><br>
+</p>
+
+The project has been developed over 4 phases:
 - Phase-1: Installation of ROS and V-REP
 - Phase-2: Implementation of A* on a non-holonomic robot
 - Phase-3: Implementation of A* on a differential-drive robot
 - Phase-4: Implementation of A* on Turtlebot using ROS
+- Phases 1 and 2 have been implemented on another [repository](https://github.com/urastogi885/a-star-robot)
 
-Phases 1 and 2 have been implemented on another [repository](https://github.com/urastogi885/a-star-robot)
+A sample output for can be found [here](https://github.com/urastogi885/a-star-turtlebot#phase3-output)
 
 ## Authors
 
@@ -68,6 +78,16 @@ Gazebo on your system.
 - If you wish to install Gazebo separately, then follow the instruction on the [Gazebo install page](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install).
 - Install Turtlebot-3 package and its dependencies using this [link](https://programmer.help/blogs/ubuntu-18.04-lts-melodic-ros-configuration-turtlebot-3-running-gazebo-simulation.html).
 - Note that Turtlebot-3 package is supported by ROS Melodic as well as Kinetic.
+
+## Phase3 Output
+
+In phase-3, a video output was generated to show the exploration and final path a differential-drive robot might take 
+using the OpenCV library. The output for one case is presented below.
+
+<p align="center">
+  <img src="https://github.com/urastogi885/a-star-turtlebot/blob/master/images/phase3.gif">
+  <br><b>Figure 2 - Exploration of a differential-drive robot using A* to find optimal path from start to goal</b><br>
+</p>
  
 ## Run Instructions
 
@@ -84,7 +104,7 @@ python3 a_star_turtlebot.py start_x,start_y,start_orientation goal_x,goal_y rpm1
 python3 a_star_turtlebot.py -4,-4.5,0 4.25,2.75 30,25,5 0
 ```
 
-- This would generate a text file that will be used to run the Turtlebot in Gazebo.
+- This would generate a text file that will be used to run the Turtlebot-3 in Gazebo.
 - Note the following to try the code with other inputs:
     - The origin of the map is taken at the center of the map s make sure to take into consideration in which 
     quadrant your points lie.
@@ -92,6 +112,8 @@ python3 a_star_turtlebot.py -4,-4.5,0 4.25,2.75 30,25,5 0
     - In addition to that, clearance is taken in centimeters.
     - Refer documentation of [*a_star_turtlebot.py*](https://github.com/urastogi885/a-star-turtlebot/blob/master/a_star_turtlebot.py) to
     understand further about input arguments.
+    - Set animation to 1 to generate an exploration output as shown in [Phase3 Output](https://github.com/urastogi885/a-star-turtlebot#phase3-output).
+    Note that this drastically increases exploration time. 
 - Launch the world, spawn turtlebot, navigate it to the desired goal point. Type:
 
 ```
