@@ -28,14 +28,9 @@ A sample output for can be found [here](https://github.com/urastogi885/a-star-tu
 - [Umang Rastogi](https://github.com/urastogi885)
 - [Naman Gupta](https://github.com/namangupta98)
 
-## For TAs
+## Todo
 
-- The following repositories contain implementation of both Phase-3 and Phase-4 of Project-3.
-- You can access the submission version from the [*release section*](https://github.com/urastogi885/a-star-turtlebot/releases)
-- For the 2 videos, the following start and goal points were used repsectively:
-	- First video: Start-(-4,-3,0) Goal-(0,-3)
-	- Second video: Start-(-4,-4.5,0) Goal-(4.25,2.75)
-- There are 2 launch files, namely, one for each video mentioned above. They have been indexed accordingly.
+- Add path smoothing
 
 ## Dependencies
 
