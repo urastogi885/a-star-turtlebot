@@ -76,7 +76,23 @@ by following the instructions given on referenced web-page.
 - We recommend installing the full-desktop version of ROS because it automatically installs the latest compatible version of
 Gazebo on your system.
 - If you wish to install Gazebo separately, then follow the instruction on the [Gazebo install page](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install).
-- Install Turtlebot-3 package and its dependencies using this [link](https://programmer.help/blogs/ubuntu-18.04-lts-melodic-ros-configuration-turtlebot-3-running-gazebo-simulation.html).
+- Install Turtlebot-3 package and its dependencies:
+```
+cd ~/<ROS_Workspace>/src
+git clone https://github.com/ROBOTIS-GIT/turtlebot3.git
+git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+cd  ../ && catkin_make
+sudo su
+cp -r src/turtlebot3/ /opt/ros/<distro>/share/
+cp -r src/turtlebot3_msgs/ /opt/ros/<distro>/share/
+cp -r src/turtlebot3_simulations/ /opt/ros/<distro>/share/
+```
+- Using the same terminal window, check installation of turtlebot3:
+```
+source devel/setup.bash
+roslaunch turtlebot3_gazebo turtlebot3_world.launch
+```
 - Note that Turtlebot-3 package is supported by ROS Melodic as well as Kinetic.
 
 ## Phase3 Output
