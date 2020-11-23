@@ -34,7 +34,7 @@ Phases 1 and 2 have been implemented on another [repository](https://github.com/
 ## Dependencies
 
 - Ubuntu 16.04/18.04
-- ROS Kinetic
+- ROS Kinetic/Melodic
 - Gazebo
 - Turtlebot3 Packages
 - Python Packages: Numpy, OpenCV-Python, Math, Queue
