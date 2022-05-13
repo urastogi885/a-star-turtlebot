@@ -20,7 +20,11 @@ The project has been developed over 4 phases:
 - Phase-3: Implementation of A* on a differential-drive robot
 - Phase-4: Implementation of A* on Turtlebot using ROS
 
-Phases 1 and 2 have been implemented on another [repository](https://github.com/urastogi885/a-star-robot). A sample output for phase-3 of the project can be found [here](https://github.com/urastogi885/a-star-turtlebot#phase3-output)
+Phases 1 and 2 have been implemented on another [repository](https://github.com/urastogi885/a-star-robot). A sample output
+for phase-3 of the project can be found [here](https://github.com/urastogi885/a-star-turtlebot#phase3-output)
+
+Also, this project benefitted from my learnings while working on the [Optimal Path Finder](https://github.com/urastogi885/optimal-path-finder) 
+project that implements path-finding algorithms such as Breadth-First Search (BFS), Dijkstra, and A*.
 
 ## Authors
 
