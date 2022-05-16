@@ -24,7 +24,7 @@ Phases 1 and 2 have been implemented on another [repository](https://github.com/
 for phase-3 of the project can be found [here](https://github.com/urastogi885/a-star-turtlebot#phase3-output)
 
 Also, this project benefitted from my learnings while working on the [Optimal Path Finder](https://github.com/urastogi885/optimal-path-finder) 
-project that implements path-finding algorithms such as Breadth-First Search (BFS), Dijkstra, and A*.
+project that implements path-finding algorithms such as Breadth-First Search (BFS), Dijkstra, and A* in a 2D-grid environment.
 
 ## Authors
 
